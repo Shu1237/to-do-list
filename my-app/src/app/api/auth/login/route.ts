@@ -1,4 +1,4 @@
-import { LoginSchema } from "@/Schema/authSchema";
+import { LoginSchema } from "@/schema/authSchema";
 import { NextResponse } from "next/server";
 import { apiClient } from "@/api/axios";
 import { tokenSession, userSession } from "@/lib/session";

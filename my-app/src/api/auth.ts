@@ -1,4 +1,4 @@
-import { LoginSchema, RegisterSchema } from "@/Schema/authSchema";
+import { LoginSchema, RegisterSchema } from "@/schema/authSchema";
 import { apiServer } from "./axios";
 
 const apiAuth = {

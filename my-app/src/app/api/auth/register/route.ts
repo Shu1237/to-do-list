@@ -1,5 +1,5 @@
 
-import { RegisterSchema } from "@/Schema/authSchema";
+import { RegisterSchema } from "@/schema/authSchema";
 import { NextResponse } from "next/server";
 import { apiClient } from "@/api/axios";
 
