@@ -13,13 +13,9 @@ export const useAppContext = () => useContext(AuthContext);
 export const AuthProvider = ({ children, initialToken }: AuthProviderProps) => {
 
   useEffect(() => {
-    console.log("Initial token:", initialToken);
     if (initialToken) {
-      console.log(1)
       tokenSession.value = initialToken;
-      console.log(1)
       userSession.setFromToken(initialToken);
-      console.log(1)
     }
   }, [initialToken]);
 
