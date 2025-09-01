@@ -4,6 +4,18 @@ import { useState } from "react";
 import { ITask, IUser } from "@/lib/type";
 import apiTask from "@/api/task";
 import { toast } from "sonner";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableHead,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 type Props = {
   initialTasks: ITask[];
@@ -83,66 +95,80 @@ export default function TaskTable({ initialTasks, users }: Props) {
 
       {/* Form tạo task */}
       <div className="mb-4 flex flex-col gap-2">
-        <input type="text" placeholder="Tiêu đề" className="border px-2 py-1 rounded" value={editFields.title} onChange={e => setEditFields(f => ({ ...f, title: e.target.value }))} />
-        <textarea placeholder="Mô tả" className="border px-2 py-1 rounded" value={editFields.description} onChange={e => setEditFields(f => ({ ...f, description: e.target.value }))} />
+        <Input type="text" placeholder="Tiêu đề" value={editFields.title} onChange={e => setEditFields(f => ({ ...f, title: e.target.value }))} />
+        <Textarea placeholder="Mô tả" value={editFields.description} onChange={e => setEditFields(f => ({ ...f, description: e.target.value }))} />
         <div className="flex gap-2">
-          <input type="datetime-local" className="border px-2 py-1 rounded" value={editFields.startDate} onChange={e => setEditFields(f => ({ ...f, startDate: e.target.value }))} />
-          <input type="datetime-local" className="border px-2 py-1 rounded" value={editFields.dueDate} onChange={e => setEditFields(f => ({ ...f, dueDate: e.target.value }))} />
+          <Input type="datetime-local" value={editFields.startDate} onChange={e => setEditFields(f => ({ ...f, startDate: e.target.value }))} />
+          <Input type="datetime-local" value={editFields.dueDate} onChange={e => setEditFields(f => ({ ...f, dueDate: e.target.value }))} />
+          <Select value={editFields.assignedTo[0] || ""} onValueChange={v => setEditFields(f => ({ ...f, assignedTo: [v] }))}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Chọn người nhận" />
+            </SelectTrigger>
+            <SelectContent>
+              {users.filter(u => u.role !== "admin").map(u => (
+                <SelectItem key={u._id} value={u._id}>{u.fullname}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <select>
-          {users
-            .filter(u => u.role !== "admin") 
-            .map(u => (
-              <option key={u._id} value={u._id}>
-                {u.fullname}
-              </option>
-            ))}
-        </select>
 
-        <button className="px-3 py-1 bg-green-500 text-white rounded" onClick={handleCreate}>Tạo công việc</button>
+        <Button variant="default" onClick={handleCreate}>Tạo công việc</Button>
       </div>
 
       {/* Table tasks */}
-      <table className="min-w-full border border-gray-300 rounded overflow-hidden">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="px-4 py-2 border">Tiêu đề</th>
-            <th className="px-4 py-2 border">Mô tả</th>
-            <th className="px-4 py-2 border">Người giao</th>
-            <th className="px-4 py-2 border">Người nhận</th>
-            <th className="px-4 py-2 border">Bắt đầu</th>
-            <th className="px-4 py-2 border">Hạn</th>
-            <th className="px-4 py-2 border">Trạng thái</th>
-            <th className="px-4 py-2 border">Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Tiêu đề</TableHead>
+            <TableHead>Mô tả</TableHead>
+            <TableHead>Người giao</TableHead>
+            <TableHead>Người nhận</TableHead>
+            <TableHead>Bắt đầu</TableHead>
+            <TableHead>Hạn</TableHead>
+            <TableHead>Trạng thái</TableHead>
+            <TableHead>Hành động</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {tasks.map(task => (
-            <tr key={task._id} className="hover:bg-gray-50">
-              <td className="px-4 py-2 border">{editingId === task._id ? <input value={editFields.title} onChange={e => setEditFields(f => ({ ...f, title: e.target.value }))} className="border px-2 py-1 rounded w-full" /> : task.title}</td>
-              <td className="px-4 py-2 border">{editingId === task._id ? <input value={editFields.description} onChange={e => setEditFields(f => ({ ...f, description: e.target.value }))} className="border px-2 py-1 rounded w-full" /> : task.description}</td>
-              <td className="px-4 py-2 border">{task.createdBy.fullname}</td>
-              <td className="px-4 py-2 border">{task.assignedTo?.fullname}</td>
-              <td className="px-4 py-2 border">{new Date(task.startDate).toLocaleString()}</td>
-              <td className="px-4 py-2 border">{new Date(task.dueDate).toLocaleString()}</td>
-              <td className="px-4 py-2 border">{task.status}</td>
-              <td className="px-4 py-2 border flex gap-2">
+            <TableRow key={task._id}>
+              <TableCell>{editingId === task._id ? <Input value={editFields.title} onChange={e => setEditFields(f => ({ ...f, title: e.target.value }))} className="w-full" /> : task.title}</TableCell>
+              <TableCell>{editingId === task._id ? <Textarea value={editFields.description} onChange={e => setEditFields(f => ({ ...f, description: e.target.value }))} className="w-full" /> : task.description}</TableCell>
+              <TableCell>{task.createdBy.fullname}</TableCell>
+              <TableCell>{task.assignedTo?.fullname}</TableCell>
+              <TableCell>{new Date(task.startDate).toLocaleString()}</TableCell>
+              <TableCell>{new Date(task.dueDate).toLocaleString()}</TableCell>
+              <TableCell>
+                {/* Nếu có Badge component thì dùng, nếu không thì dùng span */}
+                <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${task.status === "done" ? "bg-green-100 text-green-700" : task.status === "todo" ? "bg-yellow-100 text-yellow-700" : task.status === "cancel" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700"}`}>
+                  {task.status === "done" ? "Hoàn thành" : task.status === "todo" ? "Đang làm" : task.status === "cancel" ? "Đã hủy" : task.status}
+                </span>
+              </TableCell>
+              <TableCell className="space-x-2">
                 {editingId === task._id ? (
                   <>
-                    <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={() => handleUpdate(task._id)}>Lưu</button>
-                    <button className="px-3 py-1 bg-gray-400 text-white rounded" onClick={() => setEditingId(null)}>Hủy</button>
+                    <Button size="sm" onClick={() => handleUpdate(task._id)}>
+                      Lưu
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={() => setEditingId(null)}>
+                      Hủy
+                    </Button>
                   </>
                 ) : (
                   <>
-                    <button className="px-3 py-1 bg-yellow-400 text-white rounded" onClick={() => handleEdit(task)}>Sửa</button>
-                    <button className="px-3 py-1 bg-red-500 text-white rounded" onClick={() => handleDelete(task._id)}>Xóa</button>
+                    <Button size="sm" variant="outline" onClick={() => handleEdit(task)}>
+                      Sửa
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => handleDelete(task._id)}>
+                      Xóa
+                    </Button>
                   </>
                 )}
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

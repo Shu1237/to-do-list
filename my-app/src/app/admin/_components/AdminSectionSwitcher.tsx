@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, ReactNode } from "react";
+import { Button } from "@/components/ui/button";
 
 type Props = {
   sections: { label: string; content: ReactNode }[];
@@ -12,22 +13,21 @@ export default function AdminSectionSwitcher({ sections }: Props) {
   return (
     <div>
       {/* Tabs */}
-      <div className="flex border-b border-gray-300 mb-4">
+      <div className="flex gap-2 mb-4 bg-muted/40 p-2 rounded-lg shadow-sm">
         {sections.map((section, idx) => (
-          <button
+          <Button
             key={idx}
+            variant={idx === activeIndex ? "default" : "ghost"}
             onClick={() => setActiveIndex(idx)}
-            className={`px-4 py-2 font-medium ${
-              idx === activeIndex ? "border-b-2 border-blue-600 text-blue-600" : "text-gray-600"
-            }`}
+            className={`rounded-full px-6 py-2 font-semibold transition-all duration-150 ${idx === activeIndex ? "shadow bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"}`}
           >
             {section.label}
-          </button>
+          </Button>
         ))}
       </div>
 
       {/* Active section content */}
-      <div>{sections[activeIndex].content}</div>
+      <div className="rounded-lg bg-background shadow p-4">{sections[activeIndex].content}</div>
     </div>
   );
 }
