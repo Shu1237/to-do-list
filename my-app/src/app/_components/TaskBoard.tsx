@@ -6,6 +6,10 @@ import { ITask, Task } from "@/lib/type";
 import type { CreateTaskDto } from "@/schema/taskSchema";
 import apiTask from "@/api/task";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 
 type Props = {
   initialTasks: ITask[];
@@ -119,17 +123,14 @@ export default function TaskBoard({ initialTasks }: Props) {
       <TaskForm onAdd={handleAdd} />
       <div className="flex gap-2 mb-4">
         {["", "todo", "done", "cancel"].map((status) => (
-          <button
+          <Button
             key={status}
+            variant={sortStatus === status || (!status && !sortStatus) ? "default" : "outline"}
             onClick={() => setSortStatus(status)}
-            className={`px-3 py-1 rounded ${
-              sortStatus === status || (!status && !sortStatus)
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200"
-            }`}
+            className="rounded-full px-4 py-1 text-sm capitalize"
           >
             {status === "" ? "Tất cả" : status.charAt(0).toUpperCase() + status.slice(1)}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -140,80 +141,58 @@ export default function TaskBoard({ initialTasks }: Props) {
           filteredTasks.map((task) => (
             <div
               key={task._id}
-              className="bg-white rounded-lg shadow p-5 flex flex-col gap-2 border hover:shadow-lg transition"
+              className="bg-card rounded-xl shadow-lg p-6 flex flex-col gap-3 border border-border hover:shadow-2xl transition-all duration-200"
             >
               {editingId === task._id ? (
                 <>
-                  <div className="flex items-center justify-between">
-                    <input
-                      className="text-xl font-semibold border px-2 py-1 rounded w-1/2"
+                  <div className="flex items-center justify-between gap-2">
+                    <Input
+                      className="text-xl font-semibold w-1/2"
                       value={editFields.title}
-                      onChange={(e) =>
-                        setEditFields((f) => ({ ...f, title: e.target.value }))
-                      }
+                      onChange={(e) => setEditFields((f) => ({ ...f, title: e.target.value }))}
                     />
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${
-                        statusColor[task.status] || "bg-gray-200 text-gray-700"
-                      }`}
-                    >
+                    <Badge variant="outline" className="capitalize px-3 py-1 text-xs font-bold">
                       {task.status}
-                    </span>
+                    </Badge>
                   </div>
-                  <textarea
-                    className="border px-2 py-1 rounded"
+                  <Textarea
+                    className="mb-2"
                     value={editFields.description}
-                    onChange={(e) =>
-                      setEditFields((f) => ({ ...f, description: e.target.value }))
-                    }
+                    onChange={(e) => setEditFields((f) => ({ ...f, description: e.target.value }))}
                   />
                   <div className="flex gap-2">
-                    <input
+                    <Input
                       type="datetime-local"
-                      className="border px-2 py-1 rounded w-1/2"
+                      className="w-1/2"
                       value={editFields.startDate}
-                      onChange={(e) =>
-                        setEditFields((f) => ({ ...f, startDate: e.target.value }))
-                      }
+                      onChange={(e) => setEditFields((f) => ({ ...f, startDate: e.target.value }))}
                     />
-                    <input
+                    <Input
                       type="datetime-local"
-                      className="border px-2 py-1 rounded w-1/2"
+                      className="w-1/2"
                       value={editFields.dueDate}
-                      onChange={(e) =>
-                        setEditFields((f) => ({ ...f, dueDate: e.target.value }))
-                      }
+                      onChange={(e) => setEditFields((f) => ({ ...f, dueDate: e.target.value }))}
                     />
                   </div>
                   <div className="flex gap-2 mt-2">
-                    <button
-                      className="px-3 py-1 rounded bg-blue-600 text-white"
-                      onClick={() => handleUpdate(task._id)}
-                    >
+                    <Button onClick={() => handleUpdate(task._id)}>
                       Lưu
-                    </button>
-                    <button
-                      className="px-3 py-1 rounded bg-gray-400 text-white"
-                      onClick={handleCancelEdit}
-                    >
+                    </Button>
+                    <Button variant="secondary" onClick={handleCancelEdit}>
                       Hủy
-                    </button>
+                    </Button>
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <h2 className="text-xl font-semibold">{task.title}</h2>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${
-                        statusColor[task.status] || "bg-gray-200 text-gray-700"
-                      }`}
-                    >
+                    <Badge variant="outline" className="capitalize px-3 py-1 text-xs font-bold">
                       {task.status}
-                    </span>
+                    </Badge>
                   </div>
-                  <div className="text-gray-700 mb-1">{task.description}</div>
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                  <div className="text-muted-foreground mb-1">{task.description}</div>
+                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                     <span>
                       Bắt đầu: <b>{formatDate(task.startDate)}</b>
                     </span>
@@ -223,18 +202,11 @@ export default function TaskBoard({ initialTasks }: Props) {
                     <span>
                       Người giao: <b>{task.createdBy.fullname}</b>
                     </span>
-                    {task.assignedTo &&
-                      Array.isArray(task.assignedTo) &&
-                      task.assignedTo.length > 0 && (
-                        <span>
-                          Người nhận:{" "}
-                          <b>
-                            {task.assignedTo
-                              .map((u) => (typeof u === "object" ? u.fullname : u))
-                              .join(", ")}
-                          </b>
-                        </span>
-                      )}
+                    {task.assignedTo && Array.isArray(task.assignedTo) && task.assignedTo.length > 0 && (
+                      <span>
+                        Người nhận: <b>{task.assignedTo.map((u) => (typeof u === "object" ? u.fullname : u)).join(", ")}</b>
+                      </span>
+                    )}
                   </div>
                   <div className="text-xs text-gray-400">
                     Tạo lúc: {formatDate(task.createdAt)}
@@ -242,37 +214,25 @@ export default function TaskBoard({ initialTasks }: Props) {
                   <div className="flex items-center justify-between">
                     <div className="flex gap-2 mt-2">
                       {(task.status !== "done" && task.status !== "cancel") && (
-                        <button
-                          className="px-3 py-1 rounded bg-yellow-400 text-white"
-                          onClick={() => handleUpdate(task._id)}
-                        >
+                        <Button variant="outline" onClick={() => handleEdit(task)}>
                           Sửa
-                        </button>
+                        </Button>
                       )}
                       {(task.status !== "done" && task.status !== "cancel") && (
-                        <button
-                          className="px-3 py-1 rounded bg-red-500 text-white"
-                          onClick={() => handleDelete(task._id)}
-                        >
+                        <Button variant="destructive" onClick={() => handleDelete(task._id)}>
                           Xóa
-                        </button>
+                        </Button>
                       )}
                     </div>
                     {task.status !== "done" && task.status !== "cancel" && (
-                      <button
-                        className="px-3 py-1 rounded bg-green-500 text-white"
-                        onClick={() => handleUpdateStatus(task._id)}
-                      >
+                      <Button variant="default" onClick={() => handleUpdateStatus(task._id)}>
                         Hoàn thành
-                      </button>
+                      </Button>
                     )}
                     {task.status === "cancel" && (
-                      <button
-                        className="px-3 py-1 rounded bg-yellow-500 text-white"
-                        onClick={() => handleRestore(task._id)}
-                      >
+                      <Button variant="secondary" onClick={() => handleRestore(task._id)}>
                         Khôi phục
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </>

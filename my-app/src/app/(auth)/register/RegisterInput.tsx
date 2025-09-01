@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import apiAuth from '@/api/auth';
 import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export default function RegisterInput() {
   const [fullname, setFullname] = useState('');
@@ -37,62 +39,59 @@ export default function RegisterInput() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-sm mx-auto bg-white p-6 rounded-lg shadow space-y-4">
-      <h2 className="text-xl font-bold mb-2 text-center">Đăng ký</h2>
-      {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+    <form onSubmit={handleSubmit} className="max-w-sm mx-auto bg-card p-8 rounded-xl shadow-lg border border-border space-y-5">
+      <h2 className="text-2xl font-bold mb-2 text-center">Đăng ký</h2>
+      {error && <div className="text-destructive text-sm text-center">{error}</div>}
       <div>
         <label className="block mb-1 font-medium">Họ và tên</label>
-        <input
+        <Input
           type="text"
-          className="w-full border rounded px-3 py-2 focus:outline-blue-500"
           value={fullname}
           onChange={e => setFullname(e.target.value)}
+          placeholder="Nhập họ tên"
           required
         />
       </div>
       <div>
         <label className="block mb-1 font-medium">Username</label>
-        <input
+        <Input
           type="text"
-          className="w-full border rounded px-3 py-2 focus:outline-blue-500"
           value={username}
           onChange={e => setUsername(e.target.value)}
+          placeholder="Nhập username"
           required
         />
       </div>
       <div>
         <label className="block mb-1 font-medium">Password</label>
-        <input
+        <Input
           type="password"
-          className="w-full border rounded px-3 py-2 focus:outline-blue-500"
           value={password}
           onChange={e => setPassword(e.target.value)}
+          placeholder="Nhập password"
           required
         />
       </div>
       <div>
         <label className="block mb-1 font-medium">Nhập lại Password</label>
-        <input
+        <Input
           type="password"
-          className={`w-full border rounded px-3 py-2 focus:outline-blue-500 ${touched && !isMatch ? 'border-red-500' : ''}`}
           value={confirmPassword}
           onChange={e => { setConfirmPassword(e.target.value); setTouched(true); }}
+          placeholder="Nhập lại password"
+          className={touched && !isMatch ? 'border-destructive' : ''}
           required
         />
         {touched && confirmPassword && !isMatch && (
-          <span className="text-red-500 text-xs">Mật khẩu không khớp</span>
+          <span className="text-destructive text-xs">Mật khẩu không khớp</span>
         )}
         {touched && confirmPassword && isMatch && (
           <span className="text-green-600 text-xs">Mật khẩu khớp</span>
         )}
       </div>
-      <button
-        type="submit"
-        className="w-full bg-blue-600 text-white py-2 cursor-pointer rounded hover:bg-blue-700 transition"
-        disabled={!isMatch || loading}
-      >
+      <Button type="submit" className="w-full" disabled={!isMatch || loading}>
         {loading ? 'Đang đăng ký...' : 'Đăng ký'}
-      </button>
+      </Button>
     </form>
   );
 }

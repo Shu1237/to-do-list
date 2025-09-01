@@ -1,6 +1,10 @@
 "use client";
+
 import React, { useState } from "react";
 import { CreateTaskDto } from "@/schema/taskSchema";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 
 type Props = {
@@ -33,41 +37,36 @@ export default function TaskForm({ onAdd }: Props) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mb-6 bg-white p-4 rounded shadow flex flex-col gap-3"
+      className="mb-6 bg-card p-6 rounded-xl shadow-lg flex flex-col gap-4 border border-border"
     >
-      <input
+      <Input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Tiêu đề"
-        className="border px-3 py-2 rounded"
         required
       />
-      <textarea
+      <Textarea
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         placeholder="Mô tả"
-        className="border px-3 py-2 rounded"
       />
       <div className="flex gap-2">
-        <input
+        <Input
           type="datetime-local"
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
-          className="border px-3 py-2 rounded w-1/2"
+          className="w-1/2"
         />
-        <input
+        <Input
           type="datetime-local"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
-          className="border px-3 py-2 rounded w-1/2"
+          className="w-1/2"
         />
       </div>
-      <button
-        type="submit"
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
+      <Button type="submit" className="w-full self-end px-6">
         Thêm công việc
-      </button>
+      </Button>
     </form>
   );
 }

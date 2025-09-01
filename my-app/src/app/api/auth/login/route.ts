@@ -11,6 +11,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Login failed" }, { status: 400 });
         }
 
+
         const response = NextResponse.json({
             msg: "Login success",
             token: data.token,
@@ -23,7 +24,6 @@ export async function POST(request: Request) {
             sameSite: "lax",
             expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
         });
-
        
 
         return response;
