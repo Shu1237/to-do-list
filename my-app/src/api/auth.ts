@@ -14,7 +14,7 @@ const apiAuth = {
   register: async (data: RegisterSchema) => {
     try {
       const res = await apiServer.post("/api/auth/register", data);
-      return res.data;
+      return res.data as string; 
     } catch (error: any) {
       throw error;
     }
@@ -22,7 +22,7 @@ const apiAuth = {
   logout: async () => {
     try {
       const res = await apiServer.post("/api/auth/logout");
-      return res.data;
+      return res.data as string;
     } catch (error: any) {
       throw error;
     }

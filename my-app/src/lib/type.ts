@@ -1,10 +1,10 @@
 export type User = {
-    id: string;
-    fullname: string;
-    username: string;
-    role: 'user' | 'admin';
-    exp?: number; 
-    iat?: number; 
+  id: string;
+  fullname: string;
+  username: string;
+  role: 'user' | 'admin';
+  exp?: number;
+  iat?: number;
 }
 
 export type AuthProviderProps = {
@@ -19,7 +19,40 @@ export type AuthContextType = {
   setToken: (t: string) => void;
   logout: () => void;
 };
-export type ResponseLogin ={
-  msg:string;
-  token:string;
+export type ResponseLogin = {
+  msg: string;
+  token: string;
 }
+export type IUserRef = {
+  _id: string;
+  fullname: string;
+  username: string;
+}
+
+export type ITask = {
+  _id: string;
+  title: string;
+  description: string;
+  startDate: string;
+  dueDate: string;
+  status: "todo" | "done" | "cancel";
+  assignedTo: IUserRef;
+  createdBy: IUserRef;
+  createdAt: string;
+  updatedAt: string;
+}
+export type Task = Omit<ITask, '_id' | 'createdAt' | 'updatedAt' | 'createdBy' | 'status' | 'assignedTo'>;
+
+export type IUser = {
+  _id: string;
+  fullname: string;
+  username: string;
+  role: "admin" | "user";
+  status: "active" | "inactive"; 
+  createdAt: string; 
+  updatedAt: string;
+  __v: number;
+}
+
+
+

@@ -12,9 +12,9 @@ export default function Mode() {
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur py-2 supports-[backdrop-filter]:bg-background/60 ">
             <div onClick={() => route.push('/')}
                 className=" container mx-auto flex h-16 items-center justify-between px-4">
-                <div className="w-12 h-12 cursor-pointer">
-                    {/* <img src={isDark ? '/p15.jpg' : '/p6.webp'} alt="Shu" className="-w-full rounded-full" /> */}
-                </div>
+                {/* <div className="w-12 h-12 cursor-pointer">
+                    <img src='' alt="Shu" className="-w-full rounded-full" />
+                </div> */}
 
                 <div className="flex gap-2 items-center">
                     <div onClick={() => setTheme(isDark ? 'light' : 'dark')}

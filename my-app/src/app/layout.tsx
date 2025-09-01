@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import ClientLayoutWrapper from "@/components/ClientLayoutWrapper";
 import { cookies } from "next/dist/server/request/cookies";
 import { AuthProvider } from "@/context/auth-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 
 
@@ -37,6 +38,7 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
+            <Toaster richColors />
           </ThemeProvider>
         </AuthProvider>
 

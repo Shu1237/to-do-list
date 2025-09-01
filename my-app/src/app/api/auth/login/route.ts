@@ -1,9 +1,6 @@
 import { LoginSchema } from "@/schema/authSchema";
 import { NextResponse } from "next/server";
 import { apiClient } from "@/api/axios";
-import { tokenSession, userSession } from "@/lib/session";
-import jwt from 'jsonwebtoken'
-import { User } from "@/lib/type";
 export async function POST(request: Request) {
     try {
         const body: LoginSchema = await request.json();
@@ -21,9 +18,9 @@ export async function POST(request: Request) {
 
         response.cookies.set("token", data.token, {
             httpOnly: true,
-            sameSite: "strict",
             secure: process.env.NODE_ENV === "production",
             path: "/",
+            sameSite: "lax",
             expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
         });
 

@@ -1,4 +1,4 @@
-"use client";
+ 
 
 import { jwtDecode } from "jwt-decode";
 import { User } from "./type";

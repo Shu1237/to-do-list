@@ -3,6 +3,7 @@ import React from 'react'
 import { Button } from './ui/button'
 import apiAuth from '@/api/auth';
 import { useRouter } from 'next/navigation';
+import { userSession } from '@/lib/session';
 
 export default function HeaderClinet() {
   const route = useRouter();
@@ -16,8 +17,10 @@ export default function HeaderClinet() {
   };
 
   return (
-   <Button onClick={handleLogout} className='cursor-pointer'>
-    Logout
-   </Button>
+ 
+      <Button onClick={handleLogout} className='cursor-pointer'>
+        Logout
+      </Button>
+   
   )
 }
