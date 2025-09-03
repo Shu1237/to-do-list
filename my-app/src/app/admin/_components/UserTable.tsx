@@ -14,9 +14,11 @@ import {
   TableHead,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import BaseFormUser from "@/components/base/baseFormUser";
 import { FormErrorHandler } from "@/lib/FormErrorHandler";
+import { handleErrorApi } from "@/lib/utils";
+import { updateAccountSchema } from "@/schema/userSchema";
+
 
 
 
@@ -38,8 +40,15 @@ export default function UserTable({ initialUsers }: UserTableProps) {
   // Save edit
   const handleUpdate = async (id: string) => {
     setFieldErrors({});
-    if (!editName.trim()) {
-      setFieldErrors({ fullname: "Tên không được để trống" });
+    const result = updateAccountSchema.safeParse({ fullname: editName });
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.issues.forEach((err) => {
+        if (typeof err.path[0] === 'string' || typeof err.path[0] === 'number') {
+          errors[err.path[0] as string | number] = err.message;
+        }
+      });
+      setFieldErrors(errors);
       return;
     }
     try {
@@ -49,17 +58,13 @@ export default function UserTable({ initialUsers }: UserTableProps) {
       setOpenEdit(false);
       toast.success("Cập nhật thành công");
     } catch (error: any) {
-      const handler = new FormErrorHandler(error?.response?.data || {});
-      if (handler.hasErrors()) {
-        setFieldErrors(handler.fieldErrors);
-        if (handler.generalError) {
-          toast.error(handler.generalError);
-        }
-      } else {
-        toast.error(error?.response?.data?.message || "Cập nhật thất bại!");
-      }
+      console.log(error)
+    const validation=  handleErrorApi(error, "Cập nhật thất bại!");
+    if(validation?.fieldErrors){
+      setFieldErrors(validation.fieldErrors);
     }
   };
+}
 
   // Delete
   const handleDelete = async (id: string) => {
@@ -68,14 +73,7 @@ export default function UserTable({ initialUsers }: UserTableProps) {
       setUsers(users.filter(u => u._id !== id));
       toast.success("Xóa thành công");
     } catch (error: any) {
-      const handler = new FormErrorHandler(error?.response || {});
-      if (handler.hasErrors()) {
-        if (handler.generalError) {
-          toast.error(handler.generalError);
-        }
-      } else {
-        toast.error(error?.response?.data?.message || "Xóa user thất bại!");
-      }
+       handleErrorApi(error, "Xóa user thất bại!");
     }
   };
 

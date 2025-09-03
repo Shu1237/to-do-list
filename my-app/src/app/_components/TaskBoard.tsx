@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { statusColors } from "@/lib/style";
+import { handleErrorApi } from "@/lib/utils";
 
 
 export default function TaskBoard({ initialTasks }: TaskBoardProps) {
@@ -70,14 +71,9 @@ export default function TaskBoard({ initialTasks }: TaskBoardProps) {
         toast.success("Thêm công việc thành công");
       }
     } catch (err: any) {
-      const handler = new FormErrorHandler(err?.response || {});
-      if (handler.hasErrors()) {
-        setFieldErrors(handler.fieldErrors);
-        if (handler.generalError) {
-          toast.error(handler.generalError);
-        }
-      } else {
-        toast.error(err?.response?.data?.message || "Thêm công việc thất bại!");
+      const validation = handleErrorApi(err, "Thêm công việc thất bại!");
+      if (validation?.fieldErrors) {
+        setFieldErrors(validation.fieldErrors);
       }
     }
   };
@@ -139,15 +135,9 @@ export default function TaskBoard({ initialTasks }: TaskBoardProps) {
         toast.error("Cập nhật thất bại");
       }
     } catch (err: any) {
-      const handler = new FormErrorHandler(err?.response || {});
-      console.log("FormErrorHandler:", handler);
-      if (handler.hasErrors()) {
-        setFieldErrors(handler.fieldErrors);
-        if (handler.generalError) {
-          toast.error(handler.generalError);
-        }
-      } else {
-        toast.error(err?.response?.data?.message || "Cập nhật thất bại!");
+      const validation = handleErrorApi(err, "Cập nhật thất bại!");
+      if (validation?.fieldErrors) {
+        setFieldErrors(validation.fieldErrors);
       }
     }
   };
@@ -161,14 +151,7 @@ export default function TaskBoard({ initialTasks }: TaskBoardProps) {
         toast.success("Cập nhật trạng thái thành công");
       }
     } catch (error: any) {
-      const handler = new FormErrorHandler(error?.response || {});
-      if (handler.hasErrors()) {
-        if (handler.generalError) {
-          toast.error(handler.generalError);
-        }
-      } else {
-        toast.error(error?.response?.data?.message || "Cập nhật thất bại!");
-      }
+      handleErrorApi(error, "Cập nhật trạng thái thất bại!");
     }
   };
 
@@ -180,14 +163,7 @@ export default function TaskBoard({ initialTasks }: TaskBoardProps) {
         toast.success("Xóa công việc thành công");
       }
     } catch (error: any) {
-      const handler = new FormErrorHandler(error?.response || {});
-      if (handler.hasErrors()) {
-        if (handler.generalError) {
-          toast.error(handler.generalError);
-        }
-      } else {
-        toast.error(error?.response?.data?.message || "Xóa công việc thất bại!");
-      }
+      handleErrorApi(error, "Xóa công việc thất bại!");
     }
   };
 
@@ -199,14 +175,7 @@ export default function TaskBoard({ initialTasks }: TaskBoardProps) {
         toast.success("Khôi phục công việc thành công");
       }
     } catch (error: any) {
-      const handler = new FormErrorHandler(error?.response || {});
-      if (handler.hasErrors()) {
-        if (handler.generalError) {
-          toast.error(handler.generalError);
-        }
-      } else {
-        toast.error(error?.response?.data?.message || "Khôi phục công việc thất bại!");
-      }
+      handleErrorApi(error, "Khôi phục công việc thất bại!");
     }
   };
 

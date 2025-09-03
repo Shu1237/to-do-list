@@ -18,7 +18,7 @@ import BaseFormUpdate from "@/components/base/baseFormUpdate";
 import BaseView from "@/components/base/baseView";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { CreateTaskSchema } from "@/schema/taskSchema";
-import { FormErrorHandler } from "@/lib/FormErrorHandler";
+import { handleErrorApi } from "@/lib/utils";
 
 
 export default function TaskTable({ initialTasks, users }: TasksTableProps) {
@@ -78,15 +78,9 @@ export default function TaskTable({ initialTasks, users }: TasksTableProps) {
       setOpenCreate(false);
       toast.success("Tạo công việc thành công");
     } catch (err: any) {
-      const handler = new FormErrorHandler(err?.response || {});
-      console.log("FormErrorHandler:", handler);
-      if (handler.hasErrors()) {
-        setFieldErrors(handler.fieldErrors);
-        if (handler.generalError) {
-          toast.error(handler.generalError);
-        }
-      } else {
-        toast.error(err?.response?.data?.message || "Tạo thất bại!");
+      const validation = handleErrorApi(err, "Tạo thất bại!");
+      if (validation?.fieldErrors) {
+        setFieldErrors(validation.fieldErrors);
       }
     }
   };
@@ -137,14 +131,9 @@ export default function TaskTable({ initialTasks, users }: TasksTableProps) {
       setOpenEdit(false);
       toast.success("Cập nhật thành công");
     } catch (err: any) {
-      const handler = new FormErrorHandler(err?.response || {});
-      if (handler.hasErrors()) {
-        setFieldErrors(handler.fieldErrors);
-        if (handler.generalError) {
-          toast.error(handler.generalError);
-        }
-      } else {
-        toast.error(err?.response?.data?.message || "Cập nhật thất bại!");
+      const validation = handleErrorApi(err, "Cập nhật thất bại!");
+      if (validation?.fieldErrors) {
+        setFieldErrors(validation.fieldErrors);
       }
     }
   };
@@ -157,14 +146,7 @@ export default function TaskTable({ initialTasks, users }: TasksTableProps) {
         toast.success("Đã chuyển trạng thái thành hủy");
       }
     } catch (error: any) {
-      const handler = new FormErrorHandler(error?.response || {});
-      if (handler.hasErrors()) {
-        if (handler.generalError) {
-          toast.error(handler.generalError);
-        }
-      } else {
-        toast.error(error?.response?.data?.message || "Xóa công việc thất bại!");
-      }
+      handleErrorApi(error, "Xóa công việc thất bại!");
     }
   };
 
@@ -182,14 +164,7 @@ export default function TaskTable({ initialTasks, users }: TasksTableProps) {
           toast.success("Cập nhật trạng thái thành công");
         }
       } catch (error: any) {
-        const handler = new FormErrorHandler(error?.response || {});
-        if (handler.hasErrors()) {
-          if (handler.generalError) {
-            toast.error(handler.generalError);
-          }
-        } else {
-          toast.error(error?.response?.data?.message || "Cập nhật trạng thái thất bại");
-        }
+        handleErrorApi(error, "Cập nhật trạng thái thất bại!");
       }
     }
   };
@@ -199,20 +174,13 @@ export default function TaskTable({ initialTasks, users }: TasksTableProps) {
     if (updatedTask) {
       try {
         const res = await apiTask.restore(id);
-      if (res) {
-        updatedTask.status = "todo";
-        setTasks([...tasks]);
-        toast.success("Khôi phục công việc thành công");
-      } 
-      } catch (error:any) {
-          const handler = new FormErrorHandler(error?.response || {});
-      if (handler.hasErrors()) {
-        if (handler.generalError) {
-          toast.error(handler.generalError);
+        if (res) {
+          updatedTask.status = "todo";
+          setTasks([...tasks]);
+          toast.success("Khôi phục công việc thành công");
         }
-      } else {
-        toast.error(error?.response?.data?.message || "Khôi phục công việc thất bại");
-      }
+      } catch (error: any) {
+        handleErrorApi(error, "Khôi phục công việc thất bại!");
       }
     }
   };
