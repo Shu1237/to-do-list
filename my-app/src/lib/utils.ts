@@ -23,7 +23,6 @@ export const handleErrorApi = (error: any, defaultText = "Có lỗi xảy ra"): 
       return { fieldErrors: handler.fieldErrors };
     }
   } else {
-
     toast.error(error?.response?.data?.message || defaultText);
   }
   return;
