@@ -14,7 +14,7 @@ export default function ClientLayoutWrapper({ children }: { children: React.Reac
   return (
     <>
       <Header />
-      <main>{children}</main>
+      <main className="min-h-screen">{children}</main>
      {
        ! pathname.startsWith("/admin") && <Footer />
      }
