@@ -16,6 +16,7 @@ export default function BaseFormCreate({
 	users = [],
 	role = "user",
 	loading = false,
+	fieldErrors = {},
 }: BaseFormCreateProps) {
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -24,23 +25,27 @@ export default function BaseFormCreate({
 					<DialogTitle>Tạo công việc mới</DialogTitle>
 				</DialogHeader>
 				<div className="flex flex-col gap-4 py-2">
-					<div className="flex flex-col gap-1">
-						<label htmlFor="task-title" className="text-sm font-medium">Tiêu đề</label>
-						<Input id="task-title" type="text" placeholder="Nhập tiêu đề" value={fields.title} onChange={e => onChange({ ...fields, title: e.target.value })} />
-					</div>
-					<div className="flex flex-col gap-1">
-						<label htmlFor="task-desc" className="text-sm font-medium">Mô tả</label>
-						<Textarea id="task-desc" placeholder="Nhập mô tả" value={fields.description} onChange={e => onChange({ ...fields, description: e.target.value })} />
-					</div>
+							<div className="flex flex-col gap-1">
+								<label htmlFor="task-title" className="text-sm font-medium">Tiêu đề</label>
+								<Input id="task-title" type="text" placeholder="Nhập tiêu đề" value={fields.title} onChange={e => onChange({ ...fields, title: e.target.value })} />
+								{fieldErrors.title && <span className="text-destructive text-xs">{fieldErrors.title}</span>}
+							</div>
+							<div className="flex flex-col gap-1">
+								<label htmlFor="task-desc" className="text-sm font-medium">Mô tả</label>
+								<Textarea id="task-desc" placeholder="Nhập mô tả" value={fields.description} onChange={e => onChange({ ...fields, description: e.target.value })} />
+								{fieldErrors.description && <span className="text-destructive text-xs">{fieldErrors.description}</span>}
+							</div>
 					<div className="flex gap-2">
-						<div className="flex flex-col gap-1 w-1/2">
-							<label htmlFor="task-start" className="text-sm font-medium">Bắt đầu</label>
-							<Input id="task-start" type="datetime-local" value={fields.startDate} onChange={e => onChange({ ...fields, startDate: e.target.value })} />
-						</div>
-						<div className="flex flex-col gap-1 w-1/2">
-							<label htmlFor="task-due" className="text-sm font-medium">Hạn</label>
-							<Input id="task-due" type="datetime-local" value={fields.dueDate} onChange={e => onChange({ ...fields, dueDate: e.target.value })} />
-						</div>
+								<div className="flex flex-col gap-1 w-1/2">
+									<label htmlFor="task-start" className="text-sm font-medium">Bắt đầu</label>
+									<Input id="task-start" type="datetime-local" value={fields.startDate} onChange={e => onChange({ ...fields, startDate: e.target.value })} />
+									{fieldErrors.startDate && <span className="text-destructive text-xs">{fieldErrors.startDate}</span>}
+								</div>
+								<div className="flex flex-col gap-1 w-1/2">
+									<label htmlFor="task-due" className="text-sm font-medium">Hạn</label>
+									<Input id="task-due" type="datetime-local" value={fields.dueDate} onChange={e => onChange({ ...fields, dueDate: e.target.value })} />
+									{fieldErrors.dueDate && <span className="text-destructive text-xs">{fieldErrors.dueDate}</span>}
+								</div>
 					</div>
 					{role === "admin" && users.length > 0 && (
 						<div className="flex flex-col gap-1">

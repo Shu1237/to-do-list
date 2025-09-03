@@ -74,6 +74,7 @@ export type BaseFormCreateProps = {
   users?: IUser[];
   role?: "admin" | "user";
   loading?: boolean;
+  fieldErrors?: Record<string, string>;
 };
 
 export type BaseFormUpdateProps = {
@@ -92,6 +93,7 @@ export type BaseFormUpdateProps = {
   users?: IUser[];
   role?: "admin" | "user";
   loading?: boolean;
+  fieldErrors?: Record<string, string>;
 };
 export type BaseViewProps = {
   open: boolean;
@@ -115,3 +117,24 @@ export type UserTableProps = {
 export type AdminSectionSwitcherProps = {
   sections: { label: string; content: ReactNode }[];
 };
+
+export type BackendFieldError = {
+  type: "field";
+  value: any;
+  msg: string;
+  path: string;
+  location: "body" | "query" | "params" | "headers";
+};
+export type BackendErrorResponse = {
+  error: BackendFieldError[];
+};
+
+export type BaseFormUserProps = {
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+	value: string;
+	onChange: (val: string) => void;
+	onSubmit: () => void;
+	loading?: boolean;
+	fieldErrors?: Record<string, string>;
+}

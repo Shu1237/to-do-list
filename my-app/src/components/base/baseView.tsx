@@ -22,7 +22,6 @@ export default function BaseView({ open, onOpenChange, task }: BaseViewProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="max-w-lg w-full rounded-2xl shadow-lg"
-        // ẩn nút X mặc định
         showCloseButton={false}
       >
         <DialogHeader>

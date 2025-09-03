@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ITask,  TasksTableProps } from "@/lib/type";
+import { ITask, TasksTableProps } from "@/lib/type";
 import apiTask from "@/api/task";
 import { toast } from "sonner";
 import {
@@ -17,7 +17,8 @@ import BaseFormCreate from "@/components/base/baseFormCreate";
 import BaseFormUpdate from "@/components/base/baseFormUpdate";
 import BaseView from "@/components/base/baseView";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-
+import { CreateTaskSchema } from "@/schema/taskSchema";
+import { FormErrorHandler } from "@/lib/FormErrorHandler";
 
 
 export default function TaskTable({ initialTasks, users }: TasksTableProps) {
@@ -34,55 +35,29 @@ export default function TaskTable({ initialTasks, users }: TasksTableProps) {
   const [openEdit, setOpenEdit] = useState(false);
   const [openView, setOpenView] = useState(false);
   const [viewTask, setViewTask] = useState<ITask | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // sort state
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const handleEdit = (task: ITask) => {
-    setEditingId(task._id);
-    setEditFields({
-      title: task.title,
-      description: task.description,
-      startDate: task.startDate.slice(0, 16),
-      dueDate: task.dueDate.slice(0, 16),
-      assignedTo: task.assignedTo ? [task.assignedTo._id] : [],
-    });
-    setOpenEdit(true);
-  };
-
-  const handleUpdate = async () => {
-    if (!editingId) return;
-    try {
-      const updatedTask = {
-        title: editFields.title,
-        description: editFields.description,
-        startDate: new Date(editFields.startDate).toISOString(),
-        dueDate: new Date(editFields.dueDate).toISOString(),
-      };
-      const res = await apiTask.update(editingId, updatedTask);
-      setTasks(tasks.map(t => t._id === editingId ? res.task : t));
-      setEditingId(null);
-      setOpenEdit(false);
-      toast.success("Cập nhật thành công");
-    } catch (err) {
-      toast.error("Cập nhật thất bại");
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      const res = await apiTask.updateStatusCancel(id);
-      if (res) {
-        setTasks(tasks.map(t => (t._id === id ? { ...t, status: 'cancel' } : t)));
-        toast.success("Đã chuyển trạng thái thành hủy");
-      }
-    } catch {
-      toast.error("Cập nhật trạng thái thất bại");
-    }
-  };
-
-
   const handleCreate = async () => {
+    setFieldErrors({});
+    const result = CreateTaskSchema.safeParse({
+      title: editFields.title,
+      description: editFields.description,
+      startDate: new Date(editFields.startDate).toISOString(),
+      dueDate: new Date(editFields.dueDate).toISOString(),
+      assignedTo: editFields.assignedTo,
+    });
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.issues.forEach((err) => {
+        if (typeof err.path[0] === 'string' || typeof err.path[0] === 'number') {
+          errors[err.path[0] as string | number] = err.message;
+        }
+      });
+      setFieldErrors(errors);
+      return;
+    }
     try {
       const newTask = {
         title: editFields.title,
@@ -102,21 +77,119 @@ export default function TaskTable({ initialTasks, users }: TasksTableProps) {
       });
       setOpenCreate(false);
       toast.success("Tạo công việc thành công");
-    } catch {
-      toast.error("Tạo thất bại");
+    } catch (err: any) {
+      const handler = new FormErrorHandler(err?.response || {});
+      console.log("FormErrorHandler:", handler);
+      if (handler.hasErrors()) {
+        setFieldErrors(handler.fieldErrors);
+        if (handler.generalError) {
+          toast.error(handler.generalError);
+        }
+      } else {
+        toast.error(err?.response?.data?.message || "Tạo thất bại!");
+      }
     }
   };
+
+  const handleEdit = (task: ITask) => {
+    setEditingId(task._id);
+    setEditFields({
+      title: task.title,
+      description: task.description,
+      startDate: task.startDate.slice(0, 16),
+      dueDate: task.dueDate.slice(0, 16),
+      assignedTo: task.assignedTo ? [task.assignedTo._id] : [],
+    });
+    setOpenEdit(true);
+  };
+
+
+  const handleUpdate = async () => {
+    setFieldErrors({});
+    if (!editingId) return;
+    const result = CreateTaskSchema.safeParse({
+      title: editFields.title,
+      description: editFields.description,
+      startDate: new Date(editFields.startDate).toISOString(),
+      dueDate: new Date(editFields.dueDate).toISOString(),
+      assignedTo: editFields.assignedTo,
+    });
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.issues.forEach((err) => {
+        if (typeof err.path[0] === 'string' || typeof err.path[0] === 'number') {
+          errors[err.path[0] as string | number] = err.message;
+        }
+      });
+      setFieldErrors(errors);
+      return;
+    }
+    try {
+      const updatedTask = {
+        title: editFields.title,
+        description: editFields.description,
+        startDate: new Date(editFields.startDate).toISOString(),
+        dueDate: new Date(editFields.dueDate).toISOString(),
+      };
+      const res = await apiTask.update(editingId, updatedTask);
+      setTasks(tasks.map(t => t._id === editingId ? res.task : t));
+      setEditingId(null);
+      setOpenEdit(false);
+      toast.success("Cập nhật thành công");
+    } catch (err: any) {
+      const handler = new FormErrorHandler(err?.response || {});
+      if (handler.hasErrors()) {
+        setFieldErrors(handler.fieldErrors);
+        if (handler.generalError) {
+          toast.error(handler.generalError);
+        }
+      } else {
+        toast.error(err?.response?.data?.message || "Cập nhật thất bại!");
+      }
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await apiTask.updateStatusCancel(id);
+      if (res) {
+        setTasks(tasks.map(t => (t._id === id ? { ...t, status: 'cancel' } : t)));
+        toast.success("Đã chuyển trạng thái thành hủy");
+      }
+    } catch (error: any) {
+      const handler = new FormErrorHandler(error?.response || {});
+      if (handler.hasErrors()) {
+        if (handler.generalError) {
+          toast.error(handler.generalError);
+        }
+      } else {
+        toast.error(error?.response?.data?.message || "Xóa công việc thất bại!");
+      }
+    }
+  };
+
+
+
 
   const handleUpdateStatus = async (id: string) => {
     const updatedTask = tasks.find(t => t._id === id);
     if (updatedTask) {
-      const res = await apiTask.updateStatusDone(id);
-      if (res) {
-        updatedTask.status = updatedTask.status === "done" ? "todo" : "done";
-        setTasks([...tasks]);
-        toast.success("Cập nhật trạng thái thành công");
-      } else {
-        toast.error("Cập nhật trạng thái thất bại");
+      try {
+        const res = await apiTask.updateStatusDone(id);
+        if (res) {
+          updatedTask.status = updatedTask.status === "done" ? "todo" : "done";
+          setTasks([...tasks]);
+          toast.success("Cập nhật trạng thái thành công");
+        }
+      } catch (error: any) {
+        const handler = new FormErrorHandler(error?.response || {});
+        if (handler.hasErrors()) {
+          if (handler.generalError) {
+            toast.error(handler.generalError);
+          }
+        } else {
+          toast.error(error?.response?.data?.message || "Cập nhật trạng thái thất bại");
+        }
       }
     }
   };
@@ -124,13 +197,22 @@ export default function TaskTable({ initialTasks, users }: TasksTableProps) {
   const handleRestore = async (id: string) => {
     const updatedTask = tasks.find(t => t._id === id);
     if (updatedTask) {
-      const res = await apiTask.restore(id);
+      try {
+        const res = await apiTask.restore(id);
       if (res) {
         updatedTask.status = "todo";
         setTasks([...tasks]);
         toast.success("Khôi phục công việc thành công");
+      } 
+      } catch (error:any) {
+          const handler = new FormErrorHandler(error?.response || {});
+      if (handler.hasErrors()) {
+        if (handler.generalError) {
+          toast.error(handler.generalError);
+        }
       } else {
-        toast.error("Cập nhật trạng thái thất bại");
+        toast.error(error?.response?.data?.message || "Khôi phục công việc thất bại");
+      }
       }
     }
   };
@@ -169,6 +251,7 @@ export default function TaskTable({ initialTasks, users }: TasksTableProps) {
             onSubmit={handleCreate}
             users={users}
             role="admin"
+            fieldErrors={fieldErrors}
           />
           <Button variant="default" onClick={() => setOpenCreate(true)}>Create</Button>
         </div>
@@ -254,6 +337,7 @@ export default function TaskTable({ initialTasks, users }: TasksTableProps) {
         }}
         users={users}
         role="admin"
+        fieldErrors={fieldErrors}
       />
 
       <BaseView

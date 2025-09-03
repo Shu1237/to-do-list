@@ -1,46 +1,48 @@
-
 import { z } from "zod";
 
-/**
- * Schema cho object user tham chiếu (assignedTo / createdBy / assignedTo items)
- */
+// User reference schema
 export const UserRefSchema = z.object({
   _id: z.string(),
-  fullname: z.string().min(1),
-  username: z.string().min(1),
+  fullname: z.string().min(1, "Fullname is required"),
+  username: z.string().min(1, "Username is required"),
 });
 
-/**
- * Schema cho request tạo Task
- * - assignedTo: optional array of string ids (admin có thể gửi),
- *   nếu user bình thường bạn nên ignore trường này ở backend.
- * - startDate / dueDate: ISO datetime string => validate bằng z.string().datetime()
- * - validate: dueDate >= startDate
- */
+// Create Task schema (client-side validation)
 export const CreateTaskSchema = z
   .object({
-    title: z.string().min(1, "Tiêu đề là bắt buộc"),
-    description: z.string().optional().or(z.literal("")).default(""),
-    startDate: z.string().datetime({ offset: true }), // ISO with offset Z
-    dueDate: z.string().datetime({ offset: true }),
-    // assignedTo có thể là mảng id (string) hoặc bỏ trống => backend sẽ xử lý role
+    title: z.string().min(3, "Tiêu đề phải ít nhất 3 ký tự"),
+    description: z.string().min(5, "Mô tả phải ít nhất 5 ký tự"),
+    startDate: z.string().refine((val) => {
+      const start = new Date(val);
+      return start.getTime() > Date.now();
+    }, { message: "Start date must be in the future" }),
+    dueDate: z.string(),
     assignedTo: z.array(z.string()).optional().default([]),
   })
   .refine((data) => {
-    try {
-      const s = new Date(data.startDate).getTime();
-      const d = new Date(data.dueDate).getTime();
-      return !Number.isNaN(s) && !Number.isNaN(d) && d >= s;
-    } catch {
-      return false;
-    }
-  }, { message: "dueDate phải lớn hơn hoặc bằng startDate", path: ["dueDate"] });
+    const start = new Date(data.startDate).getTime();
+    const due = new Date(data.dueDate).getTime();
+    return due > start;
+  }, { message: "Due date must be after start date", path: ["dueDate"] });
 
-/**
- * Schema cho Task trả về từ API (response)
- * - assignedTo và createdBy có thể là object user ref
- * - createdAt/updatedAt: ISO datetime strings
- */
+// Update Task schema (optional fields)
+export const UpdateTaskSchema = z
+  .object({
+    title: z.string().min(3).optional(),
+    description: z.string().min(5).optional(),
+    startDate: z.string().optional(),
+    dueDate: z.string().optional(),
+    assignedTo: z.array(z.string()).optional(),
+    status: z.enum(["todo", "done", "cancel"]).optional(),
+  })
+  .refine((data) => {
+    if (!data.startDate || !data.dueDate) return true;
+    const start = new Date(data.startDate).getTime();
+    const due = new Date(data.dueDate).getTime();
+    return due > start;
+  }, { message: "Due date must be after start date", path: ["dueDate"] });
+
+// Task object schema
 export const TaskSchema = z.object({
   _id: z.string(),
   title: z.string(),
@@ -54,15 +56,12 @@ export const TaskSchema = z.object({
   updatedAt: z.string().datetime({ offset: true }),
 });
 
-/**
- * Danh sách Task
- */
+// Task list
 export const TaskListSchema = z.array(TaskSchema);
 
-/**
- * Export types inferred
- */
+// Types
 export type CreateTaskDto = z.infer<typeof CreateTaskSchema>;
+export type UpdateTaskDto = z.infer<typeof UpdateTaskSchema>;
 export type IUserRef = z.infer<typeof UserRefSchema>;
 export type ITask = z.infer<typeof TaskSchema>;
 export type ITaskList = z.infer<typeof TaskListSchema>;

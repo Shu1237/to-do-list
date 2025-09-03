@@ -1,7 +1,8 @@
- 
+
 
 import { jwtDecode } from "jwt-decode";
-import { User } from "./type";
+import { BackendFieldError, User } from "./type";
+
 
 
 export class TokenSession {
@@ -41,5 +42,5 @@ export class UserSession {
     this._user = null;
   }
 }
-
 export const userSession = new UserSession();
+
