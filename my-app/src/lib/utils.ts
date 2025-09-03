@@ -15,7 +15,6 @@ type ErrorHandlerResult = {
 
 export const handleErrorApi = (error: any, defaultText = "Có lỗi xảy ra"): ErrorHandlerResult | undefined => {
   const handler = new FormErrorHandler(error?.response || {});
-  console.log(handler);
   if (handler.hasErrors()) {
     if (handler.generalError) {
       toast.error(handler.generalError);
