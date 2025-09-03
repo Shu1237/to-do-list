@@ -7,6 +7,7 @@ import { tokenSession, userSession } from '@/lib/session';
 import { ResponseLogin } from '@/lib/type';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function LoginInput() {
   const [username, setUsername] = useState<string>('');
@@ -64,6 +65,9 @@ export default function LoginInput() {
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
       </Button>
+      <div className="flex justify-end mt-1">
+        <Link href="/register" className="text-sm text-primary hover:underline">Chưa có tài khoản? Đăng ký</Link>
+      </div>
     </form>
   );
 }

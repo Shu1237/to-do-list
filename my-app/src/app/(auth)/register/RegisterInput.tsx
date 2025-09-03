@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { registerSchema } from '@/schema/authSchema';
 import { FormErrorHandler } from '@/lib/FormErrorHandler';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 export default function RegisterInput() {
 
@@ -131,6 +132,9 @@ export default function RegisterInput() {
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? 'Đang đăng ký...' : 'Đăng ký'}
       </Button>
+      <div className="flex justify-end mt-1">
+        <Link href="/login" className="text-sm text-primary hover:underline">Đã có tài khoản? Đăng nhập</Link>
+      </div>
     </form>
   );
 }
