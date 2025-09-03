@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ITask, IUser } from "@/lib/type";
+import { ITask,  TasksTableProps } from "@/lib/type";
 import apiTask from "@/api/task";
 import { toast } from "sonner";
 import {
@@ -13,16 +13,14 @@ import {
   TableHead,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import BaseFormCreate from "@/components/base/baseFormCreate";
+import BaseFormUpdate from "@/components/base/baseFormUpdate";
+import BaseView from "@/components/base/baseView";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 
-type Props = {
-  initialTasks: ITask[];
-  users: IUser[];
-};
 
-export default function TaskTable({ initialTasks, users }: Props) {
+
+export default function TaskTable({ initialTasks, users }: TasksTableProps) {
   const [tasks, setTasks] = useState<ITask[]>(initialTasks);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editFields, setEditFields] = useState({
@@ -32,6 +30,13 @@ export default function TaskTable({ initialTasks, users }: Props) {
     dueDate: "",
     assignedTo: [] as string[],
   });
+  const [openCreate, setOpenCreate] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [openView, setOpenView] = useState(false);
+  const [viewTask, setViewTask] = useState<ITask | null>(null);
+
+  // sort state
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const handleEdit = (task: ITask) => {
     setEditingId(task._id);
@@ -40,11 +45,13 @@ export default function TaskTable({ initialTasks, users }: Props) {
       description: task.description,
       startDate: task.startDate.slice(0, 16),
       dueDate: task.dueDate.slice(0, 16),
-      assignedTo: [task.assignedTo?._id || ""],
+      assignedTo: task.assignedTo ? [task.assignedTo._id] : [],
     });
+    setOpenEdit(true);
   };
 
-  const handleUpdate = async (id: string) => {
+  const handleUpdate = async () => {
+    if (!editingId) return;
     try {
       const updatedTask = {
         title: editFields.title,
@@ -52,9 +59,10 @@ export default function TaskTable({ initialTasks, users }: Props) {
         startDate: new Date(editFields.startDate).toISOString(),
         dueDate: new Date(editFields.dueDate).toISOString(),
       };
-      const res = await apiTask.update(id, updatedTask);
-      setTasks(tasks.map(t => t._id === id ? res.task : t));
+      const res = await apiTask.update(editingId, updatedTask);
+      setTasks(tasks.map(t => t._id === editingId ? res.task : t));
       setEditingId(null);
+      setOpenEdit(false);
       toast.success("Cập nhật thành công");
     } catch (err) {
       toast.error("Cập nhật thất bại");
@@ -63,13 +71,16 @@ export default function TaskTable({ initialTasks, users }: Props) {
 
   const handleDelete = async (id: string) => {
     try {
-      await apiTask.delete(id);
-      setTasks(tasks.filter(t => t._id !== id));
-      toast.success("Xóa thành công");
+      const res = await apiTask.updateStatusCancel(id);
+      if (res) {
+        setTasks(tasks.map(t => (t._id === id ? { ...t, status: 'cancel' } : t)));
+        toast.success("Đã chuyển trạng thái thành hủy");
+      }
     } catch {
-      toast.error("Xóa thất bại");
+      toast.error("Cập nhật trạng thái thất bại");
     }
   };
+
 
   const handleCreate = async () => {
     try {
@@ -81,38 +92,86 @@ export default function TaskTable({ initialTasks, users }: Props) {
         assignedTo: editFields.assignedTo,
       };
       const res = await apiTask.add(newTask);
-      setTasks([...tasks, res.task]);
-      setEditFields({ title: "", description: "", startDate: "", dueDate: "", assignedTo: [] });
+      setTasks(prev => [...prev, ...res.tasks]);
+      setEditFields({
+        title: "",
+        description: "",
+        startDate: "",
+        dueDate: "",
+        assignedTo: [],
+      });
+      setOpenCreate(false);
       toast.success("Tạo công việc thành công");
     } catch {
       toast.error("Tạo thất bại");
     }
   };
 
+  const handleUpdateStatus = async (id: string) => {
+    const updatedTask = tasks.find(t => t._id === id);
+    if (updatedTask) {
+      const res = await apiTask.updateStatusDone(id);
+      if (res) {
+        updatedTask.status = updatedTask.status === "done" ? "todo" : "done";
+        setTasks([...tasks]);
+        toast.success("Cập nhật trạng thái thành công");
+      } else {
+        toast.error("Cập nhật trạng thái thất bại");
+      }
+    }
+  };
+
+  const handleRestore = async (id: string) => {
+    const updatedTask = tasks.find(t => t._id === id);
+    if (updatedTask) {
+      const res = await apiTask.restore(id);
+      if (res) {
+        updatedTask.status = "todo";
+        setTasks([...tasks]);
+        toast.success("Khôi phục công việc thành công");
+      } else {
+        toast.error("Cập nhật trạng thái thất bại");
+      }
+    }
+  };
+  const handleView = (task: ITask) => {
+    setViewTask(task);
+    setOpenView(true);
+  };
+  const filteredTasks = tasks.filter(t => {
+    if (statusFilter === "all") return true;
+    return t.status === statusFilter;
+  });
+
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Quản lý công việc</h2>
-
-      {/* Form tạo task */}
-      <div className="mb-4 flex flex-col gap-2">
-        <Input type="text" placeholder="Tiêu đề" value={editFields.title} onChange={e => setEditFields(f => ({ ...f, title: e.target.value }))} />
-        <Textarea placeholder="Mô tả" value={editFields.description} onChange={e => setEditFields(f => ({ ...f, description: e.target.value }))} />
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold">Quản lý công việc</h2>
         <div className="flex gap-2">
-          <Input type="datetime-local" value={editFields.startDate} onChange={e => setEditFields(f => ({ ...f, startDate: e.target.value }))} />
-          <Input type="datetime-local" value={editFields.dueDate} onChange={e => setEditFields(f => ({ ...f, dueDate: e.target.value }))} />
-          <Select value={editFields.assignedTo[0] || ""} onValueChange={v => setEditFields(f => ({ ...f, assignedTo: [v] }))}>
+          {/* Select filter */}
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Chọn người nhận" />
+              <SelectValue placeholder="Lọc theo trạng thái" />
             </SelectTrigger>
             <SelectContent>
-              {users.filter(u => u.role !== "admin").map(u => (
-                <SelectItem key={u._id} value={u._id}>{u.fullname}</SelectItem>
-              ))}
+              <SelectItem value="all">Tất cả</SelectItem>
+              <SelectItem value="todo">Đang làm</SelectItem>
+              <SelectItem value="done">Hoàn thành</SelectItem>
+              <SelectItem value="cancel">Đã hủy</SelectItem>
             </SelectContent>
           </Select>
-        </div>
 
-        <Button variant="default" onClick={handleCreate}>Tạo công việc</Button>
+          <BaseFormCreate
+            open={openCreate}
+            onOpenChange={setOpenCreate}
+            fields={editFields}
+            onChange={setEditFields}
+            onSubmit={handleCreate}
+            users={users}
+            role="admin"
+          />
+          <Button variant="default" onClick={() => setOpenCreate(true)}>Create</Button>
+        </div>
       </div>
 
       {/* Table tasks */}
@@ -130,31 +189,30 @@ export default function TaskTable({ initialTasks, users }: Props) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tasks.map(task => (
+          {filteredTasks.map(task => (
             <TableRow key={task._id}>
-              <TableCell>{editingId === task._id ? <Input value={editFields.title} onChange={e => setEditFields(f => ({ ...f, title: e.target.value }))} className="w-full" /> : task.title}</TableCell>
-              <TableCell>{editingId === task._id ? <Textarea value={editFields.description} onChange={e => setEditFields(f => ({ ...f, description: e.target.value }))} className="w-full" /> : task.description}</TableCell>
-              <TableCell>{task.createdBy.fullname}</TableCell>
-              <TableCell>{task.assignedTo?.fullname}</TableCell>
+              <TableCell>{task.title}</TableCell>
+              <TableCell>{task.description}</TableCell>
+              <TableCell>{task.createdBy?.fullname || "Chưa có người giao"}</TableCell>
+              <TableCell>{task.assignedTo?.fullname || "Chưa có người nhận"}</TableCell>
               <TableCell>{new Date(task.startDate).toLocaleString()}</TableCell>
               <TableCell>{new Date(task.dueDate).toLocaleString()}</TableCell>
               <TableCell>
-                {/* Nếu có Badge component thì dùng, nếu không thì dùng span */}
-                <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${task.status === "done" ? "bg-green-100 text-green-700" : task.status === "todo" ? "bg-yellow-100 text-yellow-700" : task.status === "cancel" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700"}`}>
-                  {task.status === "done" ? "Hoàn thành" : task.status === "todo" ? "Đang làm" : task.status === "cancel" ? "Đã hủy" : task.status}
+                <span
+                  className={`inline-block px-2 py-1 rounded text-xs font-semibold ${task.status === "done"
+                    ? "bg-green-100 text-green-700"
+                    : task.status === "todo"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : task.status === "cancel"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
+                >
+                  {task.status}
                 </span>
               </TableCell>
               <TableCell className="space-x-2">
-                {editingId === task._id ? (
-                  <>
-                    <Button size="sm" onClick={() => handleUpdate(task._id)}>
-                      Lưu
-                    </Button>
-                    <Button size="sm" variant="secondary" onClick={() => setEditingId(null)}>
-                      Hủy
-                    </Button>
-                  </>
-                ) : (
+                {task.status === "todo" ? (
                   <>
                     <Button size="sm" variant="outline" onClick={() => handleEdit(task)}>
                       Sửa
@@ -162,13 +220,49 @@ export default function TaskTable({ initialTasks, users }: Props) {
                     <Button size="sm" variant="destructive" onClick={() => handleDelete(task._id)}>
                       Xóa
                     </Button>
+                    <Button size="sm" variant="default" onClick={() => handleUpdateStatus(task._id)}>
+                      Hoàn thành
+                    </Button>
                   </>
-                )}
+                ) : task.status === "cancel" ? (
+                  <Button size="sm" variant="default" onClick={() => handleRestore(task._id)}>
+                    Khôi phục
+                  </Button>
+                ) : task.status === "done" ? (
+                  <Button size="sm" variant="secondary" onClick={() => handleView(task)}>
+                    Xem
+                  </Button>
+                ) : null}
+
               </TableCell>
+
+
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      <BaseFormUpdate
+        open={openEdit}
+        onOpenChange={setOpenEdit}
+        fields={editFields}
+        onChange={setEditFields}
+        onSubmit={handleUpdate}
+        onCancel={() => {
+          setOpenEdit(false);
+          setEditingId(null);
+        }}
+        users={users}
+        role="admin"
+      />
+
+      <BaseView
+        open={openView}
+        onOpenChange={setOpenView}
+        task={viewTask}
+        users={users}
+      />
+
     </div>
   );
 }

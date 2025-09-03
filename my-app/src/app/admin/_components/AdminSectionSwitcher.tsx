@@ -2,12 +2,11 @@
 
 import { useState, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { AdminSectionSwitcherProps } from "@/lib/type";
 
-type Props = {
-  sections: { label: string; content: ReactNode }[];
-};
 
-export default function AdminSectionSwitcher({ sections }: Props) {
+
+export default function AdminSectionSwitcher({ sections }: AdminSectionSwitcherProps) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   return (

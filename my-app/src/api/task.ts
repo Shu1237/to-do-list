@@ -1,6 +1,5 @@
 import { ITask, Task } from "@/lib/type";
 import { apiClient } from "./axios"
-import { tokenSession } from "@/lib/session";
 import { CreateTaskDto } from "@/schema/taskSchema";
 
 
@@ -35,12 +34,12 @@ const apiTask = {
     add: async (task: CreateTaskDto) => {
         try {
             const res = await apiClient.post("/tasks", task);
-            return res.data as { msg: string, task: ITask };
-
-        } catch (error) {
-            throw error;
+            return res.data as { msg: string; tasks: ITask[] };
+        } catch (error :any) {
+              throw error;
         }
     },
+
     update: async (id: string, task: Task) => {
         try {
             const res = await apiClient.put(`/tasks/${id}`, task);

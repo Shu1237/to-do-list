@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 
 export default function ClientLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  // Nếu là route auth thì không render header/footer
+ 
   const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/register") || pathname.startsWith("/(auth)");
   if (isAuthRoute) {
     return <>{children}</>;
@@ -15,7 +15,9 @@ export default function ClientLayoutWrapper({ children }: { children: React.Reac
     <>
       <Header />
       <main>{children}</main>
-      <Footer />
+     {
+       ! pathname.startsWith("/admin") && <Footer />
+     }
     </>
   );
 }

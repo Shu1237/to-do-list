@@ -6,7 +6,7 @@ import { cookies } from "next/dist/server/request/cookies";
 import { Badge } from "@/components/ui/badge";
 
 
-export default async function fetchTasks() {
+export default async function HomePage() {
   const cookieStore = await cookies();
   const token = cookieStore.get('token')?.value as string;
   const tasks: ITask[] = await apiTask.home(token);

@@ -1,21 +1,17 @@
 "use client";
 import { useMemo, useState } from "react";
-import TaskForm from "./TaskForm";
-import { statusColor } from "@/lib/style";
-import { ITask, Task } from "@/lib/type";
-import type { CreateTaskDto } from "@/schema/taskSchema";
+import BaseFormCreate from "@/components/base/baseFormCreate";
+import BaseFormUpdate from "@/components/base/baseFormUpdate";
+import BaseView from "@/components/base/baseView";
+import { ITask, Task, TaskBoardProps } from "@/lib/type";
 import apiTask from "@/api/task";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { statusColors } from "@/lib/style";
 
-type Props = {
-  initialTasks: ITask[];
-};
 
-export default function TaskBoard({ initialTasks }: Props) {
+export default function TaskBoard({ initialTasks }: TaskBoardProps) {
   const [tasks, setTasks] = useState<ITask[]>(initialTasks || []);
   const [sortStatus, setSortStatus] = useState<string>("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -25,18 +21,41 @@ export default function TaskBoard({ initialTasks }: Props) {
     startDate: "",
     dueDate: "",
   });
+  const [openCreate, setOpenCreate] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [openView, setOpenView] = useState(false);
+  const [viewTask, setViewTask] = useState<ITask | null>(null);
+  const handleView = (task: ITask) => {
+    setViewTask(task);
+    setOpenView(true);
+  };
 
-  // Add new task
-  const handleAdd = async (task: CreateTaskDto) => {
-    const res = await apiTask.add(task);
-    console.log(res)
-    if (res && res.task) {
-      setTasks((prev) => [...prev, res.task]);
-      toast.success("Thêm công việc thành công");
+
+  const handleAdd = async () => {
+    try {
+      const newTask = {
+        title: editFields.title,
+        description: editFields.description,
+        startDate: new Date(editFields.startDate).toISOString(),
+        dueDate: new Date(editFields.dueDate).toISOString(),
+        assignedTo: [],
+      };
+      const res = await apiTask.add(newTask);
+      if (res && res.tasks) {
+        setTasks((prev) => [...prev, ...res.tasks]);
+        setEditFields({ title: "", description: "", startDate: "", dueDate: "" });
+        setOpenCreate(false);
+        toast.success("Thêm công việc thành công");
+      } else {
+        toast.error("Thêm công việc thất bại");
+      }
+    } catch {
+      toast.error("Thêm công việc thất bại");
     }
   };
 
-  // Start editing a task
+
+
   const handleEdit = (task: ITask) => {
     setEditingId(task._id);
     setEditFields({
@@ -45,13 +64,14 @@ export default function TaskBoard({ initialTasks }: Props) {
       startDate: task.startDate.slice(0, 16),
       dueDate: task.dueDate.slice(0, 16),
     });
+    setOpenEdit(true);
   };
 
-  // Save edited task
-  const handleUpdate = async (id: string) => {
-    const existingTask = tasks.find((t) => t._id === id);
-    if (!existingTask) return;
 
+  const handleUpdate = async () => {
+    if (!editingId) return;
+    const existingTask = tasks.find((t) => t._id === editingId);
+    if (!existingTask) return;
     const updatedTask: ITask = {
       ...existingTask,
       title: editFields.title,
@@ -59,26 +79,23 @@ export default function TaskBoard({ initialTasks }: Props) {
       startDate: new Date(editFields.startDate).toISOString(),
       dueDate: new Date(editFields.dueDate).toISOString(),
     };
-
-    const { _id, createdAt, updatedAt, createdBy, status, assignedTo, ...rest } =
-      updatedTask;
-
-    const res = await apiTask.update(id, rest);
+    const { _id, createdAt, updatedAt, createdBy, status, assignedTo, ...rest } = updatedTask;
+    const res = await apiTask.update(editingId, rest);
     if (res && res.task) {
-      setTasks(tasks.map((t) => (t._id === id ? res.task : t)));
+      setTasks(tasks.map((t) => (t._id === editingId ? res.task : t)));
       setEditFields({ title: "", description: "", startDate: "", dueDate: "" });
       setEditingId(null);
+      setOpenEdit(false);
       toast.success("Cập nhật thành công");
     } else {
       toast.error("Cập nhật thất bại");
     }
   };
 
-  const handleCancelEdit = () => setEditingId(null);
 
   const handleUpdateStatus = async (id: string) => {
     const res = await apiTask.updateStatusDone(id);
-    if (res) {
+    if (res && res.task) {
       setTasks(tasks.map((t) => (t._id === id ? res.task : t)));
       toast.success("Cập nhật trạng thái thành công");
     } else {
@@ -104,7 +121,7 @@ export default function TaskBoard({ initialTasks }: Props) {
     }
   };
 
-  // Filter by status
+
   const filteredTasks = useMemo(() => {
     if (!Array.isArray(tasks)) return [];
     return sortStatus
@@ -120,18 +137,36 @@ export default function TaskBoard({ initialTasks }: Props) {
 
   return (
     <div>
-      <TaskForm onAdd={handleAdd} />
-      <div className="flex gap-2 mb-4">
-        {["", "todo", "done", "cancel"].map((status) => (
-          <Button
-            key={status}
-            variant={sortStatus === status || (!status && !sortStatus) ? "default" : "outline"}
-            onClick={() => setSortStatus(status)}
-            className="rounded-full px-4 py-1 text-sm capitalize"
-          >
-            {status === "" ? "Tất cả" : status.charAt(0).toUpperCase() + status.slice(1)}
-          </Button>
-        ))}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div className=" mb-4">
+          <BaseFormCreate
+            open={openCreate}
+            onOpenChange={setOpenCreate}
+            fields={editFields}
+            onChange={setEditFields}
+            onSubmit={handleAdd}
+            role="user"
+          />
+          <Button variant="default" onClick={() => setOpenCreate(true)}>Tạo công việc</Button>
+        </div>
+        <div className="flex gap-2 mb-4">
+          {["", "todo", "done", "cancel"].map((status) => (
+            <Button
+              key={status}
+              variant={
+                sortStatus === status || (!status && !sortStatus)
+                  ? "default"
+                  : "outline"
+              }
+              onClick={() => setSortStatus(status)}
+              className="rounded-full px-4 py-1 text-sm capitalize"
+            >
+              {status === ""
+                ? "Tất cả"
+                : status.charAt(0).toUpperCase() + status.slice(1)}
+            </Button>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -144,54 +179,30 @@ export default function TaskBoard({ initialTasks }: Props) {
               className="bg-card rounded-xl shadow-lg p-6 flex flex-col gap-3 border border-border hover:shadow-2xl transition-all duration-200"
             >
               {editingId === task._id ? (
-                <>
-                  <div className="flex items-center justify-between gap-2">
-                    <Input
-                      className="text-xl font-semibold w-1/2"
-                      value={editFields.title}
-                      onChange={(e) => setEditFields((f) => ({ ...f, title: e.target.value }))}
-                    />
-                    <Badge variant="outline" className="capitalize px-3 py-1 text-xs font-bold">
-                      {task.status}
-                    </Badge>
-                  </div>
-                  <Textarea
-                    className="mb-2"
-                    value={editFields.description}
-                    onChange={(e) => setEditFields((f) => ({ ...f, description: e.target.value }))}
-                  />
-                  <div className="flex gap-2">
-                    <Input
-                      type="datetime-local"
-                      className="w-1/2"
-                      value={editFields.startDate}
-                      onChange={(e) => setEditFields((f) => ({ ...f, startDate: e.target.value }))}
-                    />
-                    <Input
-                      type="datetime-local"
-                      className="w-1/2"
-                      value={editFields.dueDate}
-                      onChange={(e) => setEditFields((f) => ({ ...f, dueDate: e.target.value }))}
-                    />
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <Button onClick={() => handleUpdate(task._id)}>
-                      Lưu
-                    </Button>
-                    <Button variant="secondary" onClick={handleCancelEdit}>
-                      Hủy
-                    </Button>
-                  </div>
-                </>
+                <BaseFormUpdate
+                  open={openEdit}
+                  onOpenChange={setOpenEdit}
+                  fields={editFields}
+                  onChange={setEditFields}
+                  onSubmit={handleUpdate}
+                  onCancel={() => { setOpenEdit(false); setEditingId(null); }}
+                  role="user"
+                />
               ) : (
                 <>
                   <div className="flex items-center justify-between gap-2">
                     <h2 className="text-xl font-semibold">{task.title}</h2>
-                    <Badge variant="outline" className="capitalize px-3 py-1 text-xs font-bold">
+                    <Badge
+                      variant="outline"
+                      className={`capitalize px-3 py-1 text-xs font-bold ${statusColors[task.status] || "bg-gray-100 text-gray-700 border-gray-200"
+                        }`}
+                    >
                       {task.status}
                     </Badge>
                   </div>
-                  <div className="text-muted-foreground mb-1">{task.description}</div>
+                  <div className="text-muted-foreground mb-1">
+                    {task.description}
+                  </div>
                   <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                     <span>
                       Bắt đầu: <b>{formatDate(task.startDate)}</b>
@@ -200,11 +211,11 @@ export default function TaskBoard({ initialTasks }: Props) {
                       Hạn: <b>{formatDate(task.dueDate)}</b>
                     </span>
                     <span>
-                      Người giao: <b>{task.createdBy.fullname}</b>
+                      Người giao: <b>{task.createdBy?.fullname}</b>
                     </span>
-                    {task.assignedTo && Array.isArray(task.assignedTo) && task.assignedTo.length > 0 && (
+                    {task.assignedTo && (
                       <span>
-                        Người nhận: <b>{task.assignedTo.map((u) => (typeof u === "object" ? u.fullname : u)).join(", ")}</b>
+                        Người nhận: <b>{task.assignedTo.fullname}</b>
                       </span>
                     )}
                   </div>
@@ -213,34 +224,60 @@ export default function TaskBoard({ initialTasks }: Props) {
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex gap-2 mt-2">
-                      {(task.status !== "done" && task.status !== "cancel") && (
+                      {task.status !== "done" && task.status !== "cancel" && (
                         <Button variant="outline" onClick={() => handleEdit(task)}>
                           Sửa
                         </Button>
                       )}
-                      {(task.status !== "done" && task.status !== "cancel") && (
-                        <Button variant="destructive" onClick={() => handleDelete(task._id)}>
+                      {task.status !== "done" && task.status !== "cancel" && (
+                        <Button
+                          variant="destructive"
+                          onClick={() => handleDelete(task._id)}
+                        >
                           Xóa
                         </Button>
                       )}
                     </div>
-                    {task.status !== "done" && task.status !== "cancel" && (
-                      <Button variant="default" onClick={() => handleUpdateStatus(task._id)}>
-                        Hoàn thành
-                      </Button>
-                    )}
-                    {task.status === "cancel" && (
-                      <Button variant="secondary" onClick={() => handleRestore(task._id)}>
-                        Khôi phục
-                      </Button>
-                    )}
+                    <div className="flex gap-2 mt-2">
+                      {task.status !== "done" && task.status !== "cancel" && (
+                        <Button
+                          variant="default"
+                          onClick={() => handleUpdateStatus(task._id)}
+                        >
+                          Hoàn thành
+                        </Button>
+                      )}
+                      {task.status === "cancel" && task.createdBy._id === task.assignedTo._id && (
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleRestore(task._id)}
+                        >
+                          Khôi phục
+                        </Button>
+                      )}
+                      {task.status === "done" && (
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleView(task)}
+                        >
+                          Xem
+                        </Button>
+                      )}
+                    </div>
                   </div>
+
                 </>
               )}
             </div>
           ))
         )}
       </div>
+
+      <BaseView
+        open={openView}
+        onOpenChange={setOpenView}
+        task={viewTask}
+      />
     </div>
   );
 }

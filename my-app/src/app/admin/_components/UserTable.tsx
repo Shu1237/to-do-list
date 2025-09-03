@@ -1,10 +1,8 @@
 
-
-  // Start editing
   "use client";
 
   import { useState } from "react";
-  import { IUser } from "@/lib/type";
+  import { IUser, UserTableProps } from "@/lib/type";
   import apiUser from "@/api/user";
   import { toast } from "sonner";
   import {
@@ -19,11 +17,8 @@
 import { Input } from "@/components/ui/input";
 
 
-  type Props = {
-    initialUsers: IUser[];
-  };
 
-  export default function UserTable({ initialUsers }: Props) {
+  export default function UserTable({ initialUsers }: UserTableProps) {
     const [users, setUsers] = useState<IUser[]>(initialUsers);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editName, setEditName] = useState("");
@@ -67,6 +62,7 @@ import { Input } from "@/components/ui/input";
               <TableHead>Username</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Trạng thái</TableHead>
+              <TableHead>Ngày tạo</TableHead>
               <TableHead>Hành động</TableHead>
             </TableRow>
           </TableHeader>
@@ -87,6 +83,7 @@ import { Input } from "@/components/ui/input";
                 <TableCell>{user.username}</TableCell>
                 <TableCell>{user.role}</TableCell>
                 <TableCell>{user.status}</TableCell>
+                <TableCell>{new Date(user.createdAt).toLocaleDateString("en-US")}</TableCell>
                 <TableCell className="space-x-2">
                   {editingId === user._id ? (
                     <>

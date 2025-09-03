@@ -1,3 +1,6 @@
+import { Exo } from "next/font/google";
+import { ReactNode } from "react";
+
 export type User = {
   id: string;
   fullname: string;
@@ -48,11 +51,67 @@ export type IUser = {
   fullname: string;
   username: string;
   role: "admin" | "user";
-  status: "active" | "inactive"; 
-  createdAt: string; 
+  status: "active" | "inactive";
+  createdAt: string;
   updatedAt: string;
   __v: number;
 }
 
 
 
+export type BaseFormCreateProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  fields: {
+    title: string;
+    description: string;
+    startDate: string;
+    dueDate: string;
+    assignedTo?: string[];
+  };
+  onChange: (fields: any) => void;
+  onSubmit: () => void;
+  users?: IUser[];
+  role?: "admin" | "user";
+  loading?: boolean;
+};
+
+export type BaseFormUpdateProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  fields: {
+    title: string;
+    description: string;
+    startDate: string;
+    dueDate: string;
+    assignedTo?: string[];
+  };
+  onChange: (fields: any) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+  users?: IUser[];
+  role?: "admin" | "user";
+  loading?: boolean;
+};
+export type BaseViewProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  task: ITask | null;
+  users?: IUser[];
+};
+
+export type TaskBoardProps = {
+  initialTasks: ITask[];
+};
+export type TasksTableProps = {
+  initialTasks: ITask[];
+  users: IUser[];
+};
+
+export type UserTableProps = {
+  initialUsers: IUser[];
+};
+
+export type AdminSectionSwitcherProps = {
+  sections: { label: string; content: ReactNode }[];
+};
