@@ -127,14 +127,17 @@ export type BackendFieldError = {
 export type BackendErrorResponse = {
   error: BackendFieldError[];
 };
+export type ErrorHandlerResult = {
+  fieldErrors?: Record<string, string>;
+};
 
 export type BaseFormUserProps = {
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
-	value: string;
-	onChange: (val: string) => void;
-	onSubmit: () => void;
-	loading?: boolean;
-	fieldErrors?: Record<string, string>;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  value: string;
+  onChange: (val: string) => void;
+  onSubmit: () => void;
+  loading?: boolean;
+  fieldErrors?: Record<string, string>;
 }
 

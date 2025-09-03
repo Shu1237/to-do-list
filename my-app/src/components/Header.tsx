@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from "react";
+import React, { useContext } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "./ui/dropdown-menu";
 import { Sun, Moon, LogOut } from "lucide-react";
@@ -11,16 +11,20 @@ import apiAuth from "@/api/auth";
 import Link from "next/link";
 import { tokenSession, userSession } from "@/lib/session";
 import { Button } from "./ui/button";
+import { useAppContext } from "@/context/auth-provider";
 
 export default function Header() {
   const { theme, setTheme } = useTheme();
   const isDark = theme === "dark";
   const router = useRouter();
+  const { logout } = useAppContext();
 
   const handleLogout = async () => {
     try {
       await apiAuth.logout();
       router.push("/login");
+      logout();
+
     } catch (err) {
       console.error("Logout failed:", err);
     }

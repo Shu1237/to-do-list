@@ -2,6 +2,7 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { FormErrorHandler } from "./FormErrorHandler";
 import { toast } from "sonner";
+import { ErrorHandlerResult } from "./type";
 
 
 export function cn(...inputs: ClassValue[]) {
@@ -9,9 +10,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 
-type ErrorHandlerResult = {
-  fieldErrors?: Record<string, string>;
-};
+
 
 export const handleErrorApi = (error: any, defaultText = "Có lỗi xảy ra"): ErrorHandlerResult | undefined => {
   const handler = new FormErrorHandler(error?.response || {});
